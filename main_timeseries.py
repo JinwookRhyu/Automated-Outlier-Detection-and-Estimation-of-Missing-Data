@@ -27,8 +27,8 @@ if_showplot = True    # Do we show plots during iteration of steps A-1 and A-2?
 
 # Setting units, upper/lower bounds for plotting, and upper/lower bounds for feasibility metric per each variable.
 units = ['\u03BCm', '10\u2075cells/mL', '-', '10\u2075cells/mL', 'mmol/L', 'mmol/L', 'mmol/L', 'g/L', 'mmol/L', 'g/L', 'mmol/L', 'mmol/L', 'mOsm/kg', 'mmHg', '-', 'mmHg']
-filter_lb = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-filter_ub = [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
+filter_lb = [0] * X.shape[1]
+filter_ub = [np.inf] * X.shape[1]
 ylim_lb = [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 0, 6, 0]
 ylim_ub = [26, 500, 150, 500, 0.2, 6, 8, 6, 20, 5, 200, 5, 700, 300, 8.5, 300]
 variables_mask = [1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0] # 1 to include, 0 to exclude
@@ -71,7 +71,7 @@ plot_dataset(X=X_A1, X_label=X_label_A1, Time=Time, variables=variables, units=u
 
 ### Step A-2: Outlier detection based on T^2 and Q contributions
 # Determine number of PCs (using cross-validation)
-A_CV = V
+A_CV = int(np.round(0.8 * np.min([V, N])))
 model_CV = build_pca(X=X_A1, A=A_CV, ErrBasedOn='scaled', ConLim=Conlim_preprocessing, Contrib=Contrib, Preprocessing='standardize')
 Q = np.zeros((V, V, A_CV))
 alpha = np.zeros((V, A_CV))

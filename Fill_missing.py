@@ -52,7 +52,7 @@ def fill_missing(X, Time, method, A, algorithm, verbose=False):
         if algorithm == 'MI':
             break
         else:
-            RMSECV, _ = cross_validate_pca(X=X_scaled, A=X.shape[1], VarMethod='venetian_blind', G_obs=7, Kind='ekf_fast')
+            RMSECV, _ = cross_validate_pca(X=X_scaled, A=int(np.round(0.8*np.min(X.shape))), VarMethod='venetian_blind', G_obs=7, Kind='ekf_fast')
             if A == np.argmin(RMSECV) + 1:
                 break
             A = np.argmin(RMSECV) + 1
