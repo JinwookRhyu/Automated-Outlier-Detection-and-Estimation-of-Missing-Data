@@ -5,6 +5,7 @@ This software is associated with the paper 'Automated Outlier Detection and Esti
 
 The software is performed in Python where the 
 
+https://github.com/JinwookRhyu/Automated-Outlier-Detection-and-Estimation-of-Missing-Data/blob/main/Process_diagram.jpg?raw=true
 
 The major files under `Automated_Outlier_Detection_and_Estimation_of_Missing_Data` are:
 1. `Addmissingness`: Add missing patterns to the full dataset. Please refer to [Severson, K. A., Molaro, M. C., & Braatz, R. D. (2017). Principal component analysis of process datasets with missing values. Processes, 5(3), 38.] for more information.
