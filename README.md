@@ -7,7 +7,7 @@ The software is performed in Python where `main_demonstration` and `main_validat
 
 ![alt text](https://github.com/JinwookRhyu/Automated-Outlier-Detection-and-Estimation-of-Missing-Data/blob/main/Process_diagram.png?raw=true)
 
-The major files under `Automated_Outlier_Detection_and_Estimation_of_Missing_Data` are:
+The major files under `Codes` folder are:
 1. `Addmissingness`: Add missing patterns to the full dataset. Please refer to [Severson, K. A., Molaro, M. C., & Braatz, R. D. (2017). Principal component analysis of process datasets with missing values. Processes, 5(3), 38.] for more information.
 2. `Algorithms`: Stores 9 imputation algorithms (MI, Alternating, SVDImpute, PCADA, PPCA, PPCA-M, BPCA, SVT, and ALM) described in [Section 2.3. Imputation algorithms for missing values (Step B)].
 3. `Determine_A`: Determines the number of principal components based on cross-validation and calculates statistical metrics (e.g. T^2 and Q contributions, thresholds for each contribution, etc.).
