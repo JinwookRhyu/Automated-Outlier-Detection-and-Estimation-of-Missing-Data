@@ -24,14 +24,16 @@ X = X[:, 1:]                # Exclude time column from the dataset
 X0 = copy.deepcopy(X)       # X0 for true values
 
 # Input of Addmissingness software
-miss_type = 5   # Missingness type [1: MCAR/ 2: sensor drop-out/ 3: multi-rate/ 4: censoring/ 5: patterned]
-level = 0.10    # percent of missing data, specified by a decimal
+miss_type = 4   # Missingness type [1: MCAR/ 2: sensor drop-out/ 3: multi-rate/ 4: censoring/ 5: patterned]
+level = 0.20    # percent of missing data, specified by a decimal
 tol = 0.001     # tolerance to specify an acceptble deviation from the desired level
 X, miss_per = addMissingness(X, miss_type, level, tol)
 
 # Setting whether to normalize the dataset and save/show the plots
 if_normalize = True   # Do we normalize the given data before we put it into the code? (true or false)
 if_saveplot = False   # Do we save the plots?
+if os.path.exists('Data_missper' + str(int(level*100)) + '/') == False:
+    os.mkdir('Data_missper' + str(int(level*100)) + '/')
 fname = 'Data_missper' + str(int(level*100)) + '/Plots_misstype' + str(miss_type) + '/' # File directory to save plots if if_saveplot == True
 if os.path.exists(fname) == False:
     os.mkdir(fname)

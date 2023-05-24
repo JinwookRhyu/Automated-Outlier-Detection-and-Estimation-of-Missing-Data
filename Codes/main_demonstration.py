@@ -11,7 +11,7 @@ from Fill_missing import fill_missing
 
 # Calling X from the data file
 # The given data should be [Observation x Variable]
-data_path = "Dataset/mAb_dataset.xlsx" # File name
+data_path = "Dataset/mAb_dataset_demonstration.xlsx" # File name
 sheet_name = 0 # Sheet name. 0 for the first page, 1 for the second page, ...
 X = pd.read_excel(data_path, sheet_name=sheet_name)
 variables = X.columns[1:].tolist()
@@ -72,16 +72,6 @@ plot_dataset(X=X_A1, X_label=X_label_A1, Time=Time, variables=variables, units=u
 ### Step A-2: Outlier detection based on T^2 and Q contributions
 # Determine number of PCs (using cross-validation)
 A_CV = int(np.round(0.8 * np.min([V, N])))
-model_CV = build_pca(X=X_A1, A=A_CV, ErrBasedOn='scaled', ConLim=Conlim_preprocessing, Contrib=Contrib, Preprocessing='standardize')
-Q = np.zeros((V, V, A_CV))
-alpha = np.zeros((V, A_CV))
-R_sq = np.zeros((V, A_CV))
-for a in range(A_CV):
-    Q[:, :, a] = np.matmul(model_CV['parameters']['P'][:, :a], model_CV['parameters']['P'][:, :a].T)
-    alpha[:, a] = np.diag(Q[:, :, a])
-    R_sq[:, a] = np.divide(np.sum(np.matmul(scale_by(X=X_A1, mu=model_CV['scaling']['mu'], sigma=model_CV['scaling']['sigma']), Q[:, :, a]) ** 2, axis=0),
-                           np.sum(scale_by(X=X_A1, mu=model_CV['scaling']['mu'], sigma=model_CV['scaling']['sigma']) ** 2, axis=0))
-
 RMSE_CV, PRESS_CV = cross_validate_pca(X=X_A1, A=A_CV, VarMethod='venetian_blind', G_obs=7, Kind='ekf_fast')
 A = np.argmin(RMSE_CV) + 1
 num_outliers = 0
