@@ -7,6 +7,7 @@ The software is performed in Python where `main_demonstration` and `main_validat
 
 ![alt text](https://github.com/JinwookRhyu/Automated-Outlier-Detection-and-Estimation-of-Missing-Data/blob/main/Process_diagram.png?raw=true)
 
+# `Codes` folder
 The major files under `Codes` folder are:
 1. `Addmissingness`: Add missing patterns to the full dataset. Please refer to [Severson, K. A., Molaro, M. C., & Braatz, R. D. (2017). Principal component analysis of process datasets with missing values. Processes, 5(3), 38.] for more information.
 2. `Algorithms`: Stores 9 imputation algorithms (MI, Alternating, SVDImpute, PCADA, PPCA, PPCA-M, BPCA, SVT, and ALM) described in [Section 2.3. Imputation algorithms for missing values (Step B)].
@@ -17,8 +18,10 @@ The major files under `Codes` folder are:
 7. `main_demonstration`: The main code used in the [Section 3. Demonstration].
 8. `main_validation`: The main code used in the [Section 4. Validation].
 
+# `Codes_MATLAB` folder
 The MALTAB version of this software, which is around 5-10 times faster than Python version, is located in `Codes_MATLAB` folder.
 
+# `Dataset` folder
 The `Dataset` folder contains the following two datasets:
 1. `mAb_dataset_demonstration.xlsx`: The original dataset used in the the [Section 3. Demonstration].
 2. `mAb_dataset_validation.xlsx`: The preprocessed dataset used in the the [Section 4. Validation].
