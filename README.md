@@ -17,6 +17,8 @@ The major files under `Codes` folder are:
 7. `main_demonstration`: The main code used in the [Section 3. Demonstration].
 8. `main_validation`: The main code used in the [Section 4. Validation].
 
+The MALTAB version of this software, which is around 5-10 times faster than Python version, is located in `Codes_MATLAB` folder.
+
 The `Dataset` folder contains the following two datasets:
 1. `mAb_dataset_demonstration.xlsx`: The original dataset used in the the [Section 3. Demonstration].
 2. `mAb_dataset_validation.xlsx`: The preprocessed dataset used in the the [Section 4. Validation].
