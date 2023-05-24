@@ -21,6 +21,9 @@ The major files under `Codes` folder are:
 # `Codes_MATLAB` folder
 The MALTAB version of this software, which is around 5-10 times faster than Python version, is located in `Codes_MATLAB` folder.
 
+Reference for AddMissingness software: Severson, K.A., Molaro, M.C., and Braatz, R.D. Methods for applying principal component analysis to process datasets wiht missing values. Processes 2017, 5(3), 38 [http://web.mit.edu/braatzgroup/links.html]
+Reference for BPCA algorithm: Oba, S., Sato, M., Takemasa, I., Monden, M., Matsubara, K., and Ishii, S. A Bayesian Missing value estimation method, Bioinformatics 19, pp.2088-2096 (2003). [http://bioinformatics.oupjournals.org/cgi/content/abstract/19/16/2088?etoc] [http://ishiilab.jp/member/oba/tools/BPCAFill.html]
+
 # `Dataset` folder
 The `Dataset` folder contains the following two datasets:
 1. `mAb_dataset_demonstration.xlsx`: The original dataset used in the the [Section 3. Demonstration].
