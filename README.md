@@ -19,7 +19,7 @@ The major files under `Codes` folder are:
 8. `main_validation`: The main code used in the [Section 4. Validation].
 
 # `Codes_MATLAB` folder
-The MALTAB version of this software, which is around 5-10 times faster than Python version, is located in `Codes_MATLAB` folder.
+The MATLAB version of this software, which is around 5-10 times faster than Python version, is located in `Codes_MATLAB` folder.
 
 Reference for AddMissingness software: Severson, K.A., Molaro, M.C., and Braatz, R.D. Methods for applying principal component analysis to process datasets wiht missing values. Processes 2017, 5(3), 38. [http://web.mit.edu/braatzgroup/links.html]
 
