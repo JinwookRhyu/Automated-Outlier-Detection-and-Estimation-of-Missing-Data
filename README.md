@@ -36,4 +36,4 @@ Please contact Richard Braatz at braatz@mit.edu for any inquiry.
 # Acknowledgement
 This study was supported by the U.S. Food and Drug Administration, Contract No. 75F40121C00090. Any opinions,
 findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily
-reflect the views of the financial sponsor.
+reflect the views of the financial sponsor. MIT thanks Sartorius Stedim Cellca GMBH for the generous support of the adalibumab-producing CHO cell line.
