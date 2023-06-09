@@ -24,7 +24,7 @@ X = X[:, 1:]                # Exclude time column from the dataset
 X0 = copy.deepcopy(X)       # X0 for true values
 
 # Input of Addmissingness software
-miss_type = 4   # Missingness type [1: MCAR/ 2: sensor drop-out/ 3: multi-rate/ 4: censoring/ 5: patterned]
+miss_type = 1   # Missingness type [1: MCAR/ 2: sensor drop-out/ 3: multi-rate/ 4: censoring/ 5: patterned]
 level = 0.20    # percent of missing data, specified by a decimal
 tol = 0.001     # tolerance to specify an acceptble deviation from the desired level
 X, miss_per = addMissingness(X, miss_type, level, tol)
@@ -87,17 +87,7 @@ plot_dataset(X=X_A1, X_label=X_label_A1, Time=Time, variables=variables, units=u
 ### Step A-2: Outlier detection based on T^2 and Q contributions
 # Determine number of PCs (using cross-validation)
 A_CV = int(np.round(0.8 * np.min([V, N])))
-model_CV = build_pca(X=X_A1, A=A_CV, ErrBasedOn='scaled', ConLim=Conlim_preprocessing, Contrib=Contrib, Preprocessing='standardize')
-Q = np.zeros((V, V, A_CV))
-alpha = np.zeros((V, A_CV))
-R_sq = np.zeros((V, A_CV))
-for a in range(A_CV):
-    Q[:, :, a] = np.matmul(model_CV['parameters']['P'][:, :a], model_CV['parameters']['P'][:, :a].T)
-    alpha[:, a] = np.diag(Q[:, :, a])
-    R_sq[:, a] = np.divide(np.sum(np.matmul(scale_by(X=X_A1, mu=model_CV['scaling']['mu'], sigma=model_CV['scaling']['sigma']), Q[:, :, a]) ** 2, axis=0),
-                           np.sum(scale_by(X=X_A1, mu=model_CV['scaling']['mu'], sigma=model_CV['scaling']['sigma']) ** 2, axis=0))
-
-RMSE_CV, PRESS_CV = cross_validate_pca(X=X_A1, A=A_CV, VarMethod='venetian_blind', G_obs=7, Kind='ekf_fast')
+RMSE_CV, PRESS_CV = cross_validate_pca(X=X_A1, A=A_CV, G_obs=7)
 A = np.argmin(RMSE_CV) + 1
 num_outliers = 0
 
@@ -115,21 +105,13 @@ X_A2 = copy.deepcopy(X_A0)
 for numiter in range(maxiter_outlier):
 
     # Calculation of T^2 and Q contributions
-    model = build_pca(X=X_A1, A=A, ErrBasedOn='scaled', ConLim=Conlim_preprocessing, Contrib=Contrib)
+    model = build_pca(X=X_A1, A=A, ConLim=Conlim_preprocessing, Contrib=Contrib)
     P = model['parameters']['P']
     T = model['prediction']['T']
-    E = model['prediction']['E']
-    X_rec = rescale_by(X=model['prediction']['X_rec'], mu=model['scaling']['mu'], sigma=model['scaling']['sigma'])
-    EV = model['performance']['EV']
-    T_sq = model['diagnostics']['T_sq']
-    SRE = model['diagnostics']['SRE']
     T_sq_con = model['diagnostics']['T_sq_con']
     SRE_con = model['diagnostics']['SRE_con']
-    lim_T_sq = model['estimates']['lim_T_sq']
-    lim_SRE = model['estimates']['lim_SRE']
     lim_T_sq_con = model['estimates']['lim_T_sq_con']
     lim_SRE_con = model['estimates']['lim_SRE_con']
-    l = model['estimates']['l']
 
     # Outlier detection based on the T^2 and Q contributions
     for i in range(V):
@@ -159,7 +141,7 @@ for numiter in range(maxiter_outlier):
     plot_dataset(X=X_A1, X_label=X_label_A1, Time=Time, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
     # Determination of number of PCs
-    RMSE_CV, PRESS_CV = cross_validate_pca(X=X_A1, A=A_CV, VarMethod='venetian_blind', G_obs=7, Kind='ekf_fast')
+    RMSE_CV, PRESS_CV = cross_validate_pca(X=X_A1, A=A_CV,G_obs=7)
     A = np.argmin(RMSE_CV) + 1
     print ('Iteration ' + str(numiter+1) + ' completed for outlier detection')
 
@@ -305,7 +287,7 @@ NRMSE_final = np.squeeze(np.dstack((NRMSE_MI, NRMSE_Alternating, NRMSE_SVDImpute
 NRMSE_overall_final = [NRMSE_overall_MI, NRMSE_overall_Alternating, NRMSE_overall_SVDImpute, NRMSE_overall_PCADA, NRMSE_overall_PPCA, NRMSE_overall_PPCAM, NRMSE_overall_BPCA, NRMSE_overall_SVT, NRMSE_overall_ALM]
 
 for i in range(9):
-    model = build_pca(X=X_final[:, :, i], A=A_final[i], ErrBasedOn='scaled', ConLim=0.9999, Contrib=Contrib)
+    model = build_pca(X=X_final[:, :, i], A=A_final[i], ConLim=0.9999, Contrib=Contrib)
     T_sq_con = model['diagnostics']['T_sq_con']
     SRE_con = model['diagnostics']['SRE_con']
     lim_T_sq_con = model['estimates']['lim_T_sq_con']
