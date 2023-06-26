@@ -239,7 +239,7 @@ function [Xout, Aout] = MI(Xin)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
     
 end
@@ -284,7 +284,7 @@ function [Xout, Aout] = ALS(Xin, Ain, numiterals)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
     
 end
@@ -360,7 +360,7 @@ function [Xout, Aout] = Alternating(Xin, Ain)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
    
 end
@@ -397,7 +397,7 @@ function [Xout, Aout] = SVDImpute(Xin, Ain)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
    
 end
@@ -471,7 +471,7 @@ function [Xout, Aout] = PCADA(Xin, Ain, K)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
 
 end
@@ -489,7 +489,7 @@ function [Xout, Aout] = PPCA(Xin, Ain)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
 end
 
@@ -588,7 +588,7 @@ function [Xout, Aout] = PPCAM(Xin, Ain)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
 end
 
@@ -605,7 +605,7 @@ function [Xout, Aout] = BPCA(Xin, Ain)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
 end
 
@@ -644,7 +644,7 @@ function [Xout, Aout] = SVT(Xin)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
 end
 
@@ -695,6 +695,6 @@ function [Xout, Aout] = ALM(Xin)
     Xout = X0 .* (1-M) + Xout .* M;
     
     % Model selection based on cross-validation
-    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    RMSECV = cross_validate_pca(Xout, size(Xin, 2), 'G_obs', 7);
     [~, Aout] = min(RMSECV);
 end
