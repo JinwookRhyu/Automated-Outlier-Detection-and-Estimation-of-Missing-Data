@@ -63,7 +63,7 @@ plot_dataset(X_A1, X_label_A1, Time, variables, units, title, xlabelname, ylim_l
 %% Step A-2: Outlier detection based on T^2 and Q contributions
 % Determine number of PCs (using cross-validation)
 A_CV = round(0.8 * min([V, N]));
-[RMSE_CV, PRESS_CV] = cross_validate_pca(X_A1, A_CV, 'venetian_blind', 7, 'Kind', 'ekf_fast');
+[RMSE_CV, PRESS_CV] = cross_validate_pca(X_A1, A_CV, 'G_obs', 7);
 [~, A] = min(RMSE_CV);
 num_outliers = 0;
 
@@ -81,21 +81,13 @@ X_A2 = X_A0;
 for numiter = 1:maxiter_outlier
 
     % Calculation of T^2 and Q contributions
-    model = build_pca(X_A1, A, 'ErrBasedOn', 'scaled', 'ConLim', Conlim_preprocessing, 'Contrib', Contrib);
+    model = build_pca(X_A1, A, 'ConLim', Conlim_preprocessing, 'Contrib', Contrib);
     P = model.parameters.P;
     T = model.prediction.T;
-    E = model.prediction.E;
-    X_rec = rescale_by(model.prediction.X_rec, model.scaling.mu, model.scaling.sigma);
-    EV = model.performance.EV;
-    T_sq = model.diagnostics.T_sq;
-    SRE = model.diagnostics.SRE;
     T_sq_con = model.diagnostics.T_sq_con;
     SRE_con = model.diagnostics.SRE_con;
-    lim_T_sq = model.estimates.lim_T_sq;
-    lim_SRE = model.estimates.lim_SRE;
     lim_T_sq_con = model.estimates.lim_T_sq_con;
     lim_SRE_con = model.estimates.lim_SRE_con;
-    l = model.estimates.l;
 
     % Outlier detection based on the T^2 and Q contributions
     for i = 1:V
@@ -127,7 +119,7 @@ for numiter = 1:maxiter_outlier
     plot_dataset(X_A1, X_label_A1, Time, variables, units, title, xlabelname, ylim_lb, ylim_ub, if_saveplot, if_showplot, fname, if_nrmse, nrmse, numrow);
 
     % Determination of number of PCs
-    [RMSE_CV, PRESS_CV] = cross_validate_pca(X_A1, A_CV, 'venetian_blind', 7, 'Kind', 'ekf_fast');
+    [RMSE_CV, PRESS_CV] = cross_validate_pca(X_A1, A_CV, 'G_obs', 7);
     [~, A] = min(RMSE_CV);
     disp(['Iteration ', num2str(numiter), ' completed for outlier detection'])
 end
@@ -198,7 +190,7 @@ feasibility = zeros(1, 10);
 plausibility = zeros(1, 10);
 
 for i = 1:10
-    model = build_pca(X_final(:, :, i), A_final(i), 'ErrBasedOn', 'scaled', 'ConLim', 0.9999, 'Contrib', Contrib);
+    model = build_pca(X_final(:, :, i), A_final(i), 'ConLim', 0.9999, 'Contrib', Contrib);
     T_sq_con = model.diagnostics.T_sq_con;
     SRE_con = model.diagnostics.SRE_con;
     lim_T_sq_con = model.estimates.lim_T_sq_con;
