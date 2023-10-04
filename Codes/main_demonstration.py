@@ -26,7 +26,7 @@ fname = 'Plots/'      # File directory to save plots if if_saveplot == True
 if_showplot = True    # Do we show plots during iteration of steps A-1 and A-2?
 
 # Setting units, upper/lower bounds for plotting, and upper/lower bounds for feasibility metric per each variable.
-units = ['\u03BCm', '10\u2075cells/mL', '-', '10\u2075cells/mL', 'mmol/L', 'mmol/L', 'mmol/L', 'g/L', 'mmol/L', 'g/L', 'mmol/L', 'mmol/L', 'mOsm/kg', 'mmHg', '-', 'mmHg']
+units = ['\u03BCm', '10\u2075cells/mL', '10\u2075cells/mL', 'mmol/L', 'mmol/L', 'mmol/L', 'g/L', 'mmol/L', 'g/L', 'mmol/L', 'mmol/L', 'mOsm/kg', 'mmHg', '-']
 filter_lb = [0] * X.shape[1]
 filter_ub = [np.inf] * X.shape[1]
 ylim_lb = [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 0, 6]
@@ -152,18 +152,21 @@ if if_showplot:
 
 
 ### Step A-3: Elimination of low-quality observations
+X_B_old = copy.deepcopy(X_A0)
 X_B = copy.deepcopy(X_A2)
 X_label_B = copy.deepcopy(X_label_A2)
 Time_B = copy.deepcopy(Time)
+X_B_old = X_B_old[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) >= numminelem)], :]
 X_B = X_B[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) >= numminelem)], :]
 X_label_B = X_label_B[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) >= numminelem)], :]
 Time_B = np.array([Time_B[i] for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i, :] == 0]) >= numminelem)])
-X_label_A2[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) < numminelem)], :] = 3
+X_label_A3 = copy.deepcopy(X_label_A2)
+X_label_A3[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) < numminelem)], :] = 3
 
 if if_showplot:
     plt.figure()
-    im = plt.imshow(X_label_A2, cmap=cmap, norm=norm, interpolation='nearest', aspect='auto')
-    values = np.unique(X_label_A2.ravel())
+    im = plt.imshow(X_label_A3, cmap=cmap, norm=norm, interpolation='nearest', aspect='auto')
+    values = np.unique(X_label_A3.ravel())
     patches = [mpatches.Patch(color=cmap.colors[values[i]], label=legend_labels[values[i]]) for i in range(len(values))]
     plt.xlabel('Variables', fontsize=20)
     plt.ylabel('Observations', fontsize=20)
@@ -173,6 +176,7 @@ if if_showplot:
         plt.savefig(fname + 'preprocessed_data_indication_after_removing.png')
     plt.show()
 
+X_label_B_old = copy.deepcopy(X_label_B)
 X_label_B[X_label_B==1] = 3
 X_label_B[X_label_B==2] = 4
 
@@ -180,39 +184,39 @@ X_label_B[X_label_B==2] = 4
 ### Step B: Imputation of missing values using different imputation algorithms
 X_MI, A_MI, time_MI = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='MI')
 title = 'Filled in dataset with MI'
-plot_dataset(X=X_MI, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_MI, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_Alternating, A_Alternating, time_Alternating = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='Alternating')
 title = 'Filled in dataset with Alternating'
-plot_dataset(X=X_Alternating, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_Alternating, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_SVDImpute, A_SVDImpute, time_SVDImpute = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='SVDImpute')
 title = 'Filled in dataset with SVDImpute'
-plot_dataset(X=X_SVDImpute, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_SVDImpute, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_PCADA, A_PCADA, time_PCADA = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='PCADA')
 title = 'Filled in dataset with PCADA'
-plot_dataset(X=X_PCADA, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_PCADA, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_PPCA, A_PPCA, time_PPCA = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='PPCA')
 title = 'Filled in dataset with PPCA'
-plot_dataset(X=X_PPCA, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_PPCA, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_PPCAM, A_PPCAM, time_PPCAM = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='PPCA-M')
 title = 'Filled in dataset with PPCA-M'
-plot_dataset(X=X_PPCAM, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_PPCAM, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_BPCA, A_BPCA, time_BPCA = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='BPCA')
 title = 'Filled in dataset with BPCA'
-plot_dataset(X=X_BPCA, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_BPCA, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_SVT, A_SVT, time_SVT = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='SVT')
 title = 'Filled in dataset with SVT'
-plot_dataset(X=X_SVT, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_SVT, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 X_ALM, A_ALM, time_ALM = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='ALM')
 title = 'Filled in dataset with ALM'
-plot_dataset(X=X_ALM, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
+plot_dataset(X=X_ALM, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, if_nrmse=0, nrmse=[])
 
 ### Step C: Evaluation of each algorithm
 feasibility = np.zeros(9)

@@ -24,8 +24,8 @@ X = X[:, 1:]                # Exclude time column from the dataset
 X0 = copy.deepcopy(X)       # X0 for true values
 
 # Input of Addmissingness software
-miss_type = 1   # Missingness type [1: MCAR/ 2: sensor drop-out/ 3: multi-rate/ 4: censoring/ 5: patterned]
-level = 0.20    # percent of missing data, specified by a decimal
+miss_type = 5   # Missingness type [1: MCAR/ 2: sensor drop-out/ 3: multi-rate/ 4: censoring/ 5: patterned]
+level = 0.10    # percent of missing data, specified by a decimal
 tol = 0.001     # tolerance to specify an acceptble deviation from the desired level
 X, miss_per = addMissingness(X, miss_type, level, tol)
 
@@ -166,18 +166,21 @@ if if_showplot:
     plt.show()
 
 ### Step A-3: Elimination of low-quality observations
+X_B_old = copy.deepcopy(X0)
 X_B = copy.deepcopy(X_A2)
 X_label_B = copy.deepcopy(X_label_A2)
 Time_B = copy.deepcopy(Time)
+X_B_old = X_B_old[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) >= numminelem)], :]
 X_B = X_B[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) >= numminelem)], :]
 X_label_B = X_label_B[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) >= numminelem)], :]
 Time_B = np.array([Time_B[i] for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i, :] == 0]) >= numminelem)])
-X_label_A2[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) < numminelem)], :] = 3
+X_label_A3 = copy.deepcopy(X_label_A2)
+X_label_A3[[i for i in range(X_A2.shape[0]) if (np.sum([X_label_A2[i,:] == 0]) < numminelem)], :] = 3
 
 if if_showplot:
     plt.figure()
-    im = plt.imshow(X_label_A2, cmap=cmap, norm=norm, interpolation='nearest', aspect='auto')
-    values = np.unique(X_label_A2.ravel())
+    im = plt.imshow(X_label_A3, cmap=cmap, norm=norm, interpolation='nearest', aspect='auto')
+    values = np.unique(X_label_A3.ravel())
     patches = [mpatches.Patch(color=cmap.colors[values[i]], label=legend_labels[values[i]]) for i in range(len(values))]
     plt.xlabel('Variables', fontsize=20)
     plt.ylabel('Observations', fontsize=20)
@@ -187,6 +190,7 @@ if if_showplot:
         plt.savefig(fname + 'preprocessed_data_indication_after_removing.png')
     plt.show()
 
+X_label_B_old = copy.deepcopy(X_label_B)
 X_label_B[X_label_B==1] = 3
 X_label_B[X_label_B==2] = 4
 
@@ -203,7 +207,7 @@ for j in range(X0.shape[1]):
         NRMSE_MI[j] = np.sqrt(np.sum(np.multiply((np.divide(X_MI[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_MI = np.sqrt(np.sum(np.multiply((np.divide(X_MI - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with MI'
-plot_dataset(X=X_MI, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_MI, if_nrmse=1)
+plot_dataset(X=X_MI, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_MI, if_nrmse=1)
 
 X_Alternating, A_Alternating, time_Alternating = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='Alternating')
 NRMSE_Alternating = np.zeros((X0.shape[1]))
@@ -212,7 +216,7 @@ for j in range(X0.shape[1]):
         NRMSE_Alternating[j] = np.sqrt(np.sum(np.multiply((np.divide(X_Alternating[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_Alternating = np.sqrt(np.sum(np.multiply((np.divide(X_Alternating - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with Alternating'
-plot_dataset(X=X_Alternating, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_Alternating, if_nrmse=1)
+plot_dataset(X=X_Alternating, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_Alternating, if_nrmse=1)
 
 X_SVDImpute, A_SVDImpute, time_SVDImpute = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='SVDImpute')
 NRMSE_SVDImpute = np.zeros((X0.shape[1]))
@@ -221,7 +225,7 @@ for j in range(X0.shape[1]):
         NRMSE_SVDImpute[j] = np.sqrt(np.sum(np.multiply((np.divide(X_SVDImpute[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_SVDImpute = np.sqrt(np.sum(np.multiply((np.divide(X_SVDImpute - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with SVDImpute'
-plot_dataset(X=X_SVDImpute, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_SVDImpute, if_nrmse=1)
+plot_dataset(X=X_SVDImpute, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_SVDImpute, if_nrmse=1)
 
 X_PCADA, A_PCADA, time_PCADA = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='PCADA')
 NRMSE_PCADA = np.zeros((X0.shape[1]))
@@ -230,7 +234,7 @@ for j in range(X0.shape[1]):
         NRMSE_PCADA[j] = np.sqrt(np.sum(np.multiply((np.divide(X_PCADA[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_PCADA = np.sqrt(np.sum(np.multiply((np.divide(X_PCADA - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with PCADA'
-plot_dataset(X=X_PCADA, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_PCADA, if_nrmse=1)
+plot_dataset(X=X_PCADA, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_PCADA, if_nrmse=1)
 
 X_PPCA, A_PPCA, time_PPCA = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='PPCA')
 NRMSE_PPCA = np.zeros((X0.shape[1]))
@@ -239,7 +243,7 @@ for j in range(X0.shape[1]):
         NRMSE_PPCA[j] = np.sqrt(np.sum(np.multiply((np.divide(X_PPCA[:, j] - X0[:, j], X0_std[j])) ** 2, np.isnan(X_B[:, j]))) / np.sum(np.isnan(X_B[:, j])))
 NRMSE_overall_PPCA = np.sqrt(np.sum(np.multiply((np.divide(X_PPCA - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with PPCA'
-plot_dataset(X=X_PPCA, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_PPCA, if_nrmse=1)
+plot_dataset(X=X_PPCA, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_PPCA, if_nrmse=1)
 
 X_PPCAM, A_PPCAM, time_PPCAM = fill_missing(X=X_B, Time=Time_B, method=method, A=A, algorithm='PPCA-M')
 NRMSE_PPCAM = np.zeros((X0.shape[1]))
@@ -248,7 +252,7 @@ for j in range(X0.shape[1]):
         NRMSE_PPCAM[j] = np.sqrt(np.sum(np.multiply((np.divide(X_PPCAM[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_PPCAM = np.sqrt(np.sum(np.multiply((np.divide(X_PPCAM - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with PPCA-M'
-plot_dataset(X=X_PPCAM, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_PPCAM, if_nrmse=1)
+plot_dataset(X=X_PPCAM, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_PPCAM, if_nrmse=1)
 
 X_BPCA, A_BPCA, time_BPCA = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='BPCA')
 NRMSE_BPCA = np.zeros((X0.shape[1]))
@@ -257,7 +261,7 @@ for j in range(X0.shape[1]):
         NRMSE_BPCA[j] = np.sqrt(np.sum(np.multiply((np.divide(X_BPCA[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_BPCA = np.sqrt(np.sum(np.multiply((np.divide(X_BPCA - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with BPCA'
-plot_dataset(X=X_BPCA, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_BPCA, if_nrmse=1)
+plot_dataset(X=X_BPCA, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_BPCA, if_nrmse=1)
 
 X_SVT, A_SVT, time_SVT = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='SVT')
 NRMSE_SVT = np.zeros((X0.shape[1]))
@@ -266,7 +270,7 @@ for j in range(X0.shape[1]):
         NRMSE_SVT[j] = np.sqrt(np.sum(np.multiply((np.divide(X_SVT[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_SVT = np.sqrt(np.sum(np.multiply((np.divide(X_MI - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with SVT'
-plot_dataset(X=X_SVT, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_SVT, if_nrmse=1)
+plot_dataset(X=X_SVT, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_SVT, if_nrmse=1)
 
 X_ALM, A_ALM, time_ALM = fill_missing(X=X_B, Time=Time_B, method='mean', A=A, algorithm='ALM')
 NRMSE_ALM = np.zeros((X0.shape[1]))
@@ -275,7 +279,7 @@ for j in range(X0.shape[1]):
         NRMSE_ALM[j] = np.sqrt(np.sum(np.multiply((np.divide(X_ALM[:,j] - X0[:,j], X0_std[j])) ** 2, np.isnan(X_B[:,j]))) / np.sum(np.isnan(X_B[:,j])))
 NRMSE_overall_ALM = np.sqrt(np.sum(np.multiply((np.divide(X_ALM - X0, X0_std)) ** 2, np.isnan(X_B))) / np.sum(np.isnan(X_B)))
 title = 'Filled in dataset with ALM'
-plot_dataset(X=X_ALM, X_label=X_label_B, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_ALM, if_nrmse=1)
+plot_dataset(X=X_ALM, X_label=X_label_B, X_old=X_B_old, X_label_old=X_label_B_old, Time=Time_B, variables=variables, units=units, title=title, xlabel=xlabel, ylim_lb=ylim_lb, ylim_ub=ylim_ub, if_saveplot=if_saveplot, if_showplot=if_showplot, fname=fname, nrmse=NRMSE_ALM, if_nrmse=1)
 
 ### Step C: Evaluation of each algorithm
 feasibility = np.zeros(9)

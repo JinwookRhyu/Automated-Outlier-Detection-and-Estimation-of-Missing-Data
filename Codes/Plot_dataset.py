@@ -3,13 +3,13 @@ import numpy as np
 import math
 from PIL import Image
 
-def plot_dataset(X, X_label, Time, variables, units, title, xlabel, ylim_lb, ylim_ub, if_saveplot, fname, if_nrmse, nrmse, if_showplot = True, numrow = 3):
+def plot_dataset(X, X_label, Time, variables, units, title, xlabel, ylim_lb, ylim_ub, if_saveplot, fname, if_nrmse, nrmse, if_showplot = True, numrow = 3, X_old=np.array([]), X_label_old=np.array([])):
     assert X.shape[0] == len(Time), f"The number of observations: {X.shape[0]} does not match with the length of time: {len(Time)}"
     assert X.shape[1] == len(variables), f"The number of variables: {X.shape[1]} does not match with the length of variables list: {len(variables)}"
 
     if if_showplot == True:
 
-        color = ["blue", "cyan", "red", "springgreen", "olivedrab"]
+        color = ["blue", "cyan", "red", "limegreen", "limegreen"]
         marker = ["o", "^", "*", "^", "*"]
         size = [20, 30, 70, 30, 70]
         numcol = math.ceil(X.shape[1] / numrow)
@@ -25,10 +25,23 @@ def plot_dataset(X, X_label, Time, variables, units, title, xlabel, ylim_lb, yli
                     for k in range(j, numcol):
                         axs[-1, k].axis('off')
                     break
+
                 for k in range(0, 5):
                     x = Time[X_label[:, varind] == k]
                     y = X[X_label[:,varind]==k, varind]
                     axs[i, j].scatter(x=x, y=y, marker=marker[k], color=color[k], s=size[k])
+                    if X_old.size:
+                        x_old = Time[X_label_old[:, varind] == k]
+                        y_old = X_old[X_label_old[:, varind] == k, varind]
+                        axs[i, j].scatter(x=x_old, y=y_old, marker=marker[k], color=color[k], s=size[k])
+
+                if X_old.size:
+                    for k in range(3, 5):
+                        x = Time[X_label[:, varind] == k]
+                        y = X[X_label[:, varind] == k, varind]
+                        y_old = X_old[X_label_old[:, varind] == k-2, varind]
+                        for l in range(len(x)):
+                            axs[i, j].vlines(x = x[l], ymin = min([y[l], y_old[l]]), ymax = max([y[l], y_old[l]]), color = color[k-2], linewidth=0.5)
                 axs[i, j].minorticks_on()
                 axs[i, j].grid(which='major', linestyle='-', linewidth='0.5')
                 axs[i, j].grid(which='minor', linestyle=':', linewidth='0.5')
@@ -103,7 +116,7 @@ def plot_evaluation(feasibility, plausibility, time_final, fname, title, if_save
 
         axs[2].bar(x_pos, time_final, align='center', alpha=1, ecolor='black', capsize=10, color=color, zorder=3,
                    edgecolor='black')
-        axs[2].set_ylim(bottom=0.001, top=10**(np.ceil(max(np.log10(time_final)))))
+        axs[2].set_ylim(bottom=0.0001, top=10**(np.ceil(max(np.log10(time_final)))))
         axs[2].set_xticks(x_pos)
         axs[2].set_xticklabels(algorithms, fontsize=12)
         axs[2].tick_params(axis='x', labelsize=12)
