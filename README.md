@@ -8,7 +8,7 @@ The software is performed in Python where `main_demonstration` and `main_validat
 ![alt text](https://github.com/JinwookRhyu/Automated-Outlier-Detection-and-Estimation-of-Missing-Data/blob/main/Process_diagram.png?raw=true)
 
 Please cite this Software as:
-Jinwook Rhyu, Dragana Bozinovski, Alexis B. Dubs, Naresh Mohan, Elizabeth M. Cummings Bende, Andrew J. Maloney, Miriam Nieves, Jose Sangerman, Amos E. Lu, Moo Sun Hong, Anastasia Artamonova, Rui Wen Ou, Paul W. Barone, James C. Leung, Jacqueline M. Wolfrum, Anthony J. Sinskey, Stacy L. Springs, Richard D. Braatz, Automated outlier detection and estimation of missing data, Computers & Chemical Engineering, Volume 180, 2024, 108448, [https://doi.org/10.1016/j.compchemeng.2022.108014](https://doi.org/10.1016/j.compchemeng.2023.108448).
+Jinwook Rhyu, Dragana Bozinovski, Alexis B. Dubs, Naresh Mohan, Elizabeth M. Cummings Bende, Andrew J. Maloney, Miriam Nieves, Jose Sangerman, Amos E. Lu, Moo Sun Hong, Anastasia Artamonova, Rui Wen Ou, Paul W. Barone, James C. Leung, Jacqueline M. Wolfrum, Anthony J. Sinskey, Stacy L. Springs, Richard D. Braatz, Automated outlier detection and estimation of missing data, Computers & Chemical Engineering, Volume 180, 2024, 108448, [https://doi.org/10.1016/j.compchemeng.2023.108448](https://doi.org/10.1016/j.compchemeng.2023.108448).
 
 # `Codes` folder
 The major files under `Codes` folder are:
