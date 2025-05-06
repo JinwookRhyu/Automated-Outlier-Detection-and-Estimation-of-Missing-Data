@@ -329,15 +329,18 @@ def pca_by_svd(X, A):
 
     if N < V:
         _, _, vh = svd(np.matmul(X, X.T) / (V - 1))
-        vh = vh.T
-        P = np.matmul(X.T, vh)
+        vh = vh[:A,:]
+        P = np.matmul(X.T, vh.T)
+	P = np.linalg.lstsq(np.diag(np.sqrt(np.diag(P.T @ P))), P.T, rcond=None)[0].T
     else:
-        _, _, P = svd(np.matmul(X.T, X) / (V - 1))
-        P = P.T
+        _, _, P = svd(np.matmul(X.T, X) / (N - 1))
+        P = P[:,:A]
 
-    colsign = np.sign(P[np.abs(P).argmax(axis=0), [x for x in range(0, V)]])
+    index = np.argmax(np.abs(P).axis=0)
+    colsign = np.empty((1,A))
+    for a in range(A):
+	colsign[0,a] = np.sign(P[index[a], a])
     P = np.multiply(P, colsign)
-    P = P[:, :A]
     T = np.matmul(X, P)
     return P, T
 
