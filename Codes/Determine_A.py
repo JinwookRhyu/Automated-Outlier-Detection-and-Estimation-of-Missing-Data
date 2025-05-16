@@ -1,11 +1,13 @@
 import numpy as np
+import pandas as pd
 import copy
 import math
 import scipy.stats as st
 from sklearn.preprocessing import StandardScaler
 from scipy.stats.distributions import chi2
 from numpy.linalg import svd
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, GroupKFold
+from collections import Counter
 
 
 def build_pca(X, A, **kwargs):
@@ -60,7 +62,7 @@ def build_pca(X, A, **kwargs):
     # Check if the requested number of PCs is feasible
     assert A <= np.min(X.shape), f"The number of principal components cannot exceed min(size(X)) = {np.min(X.shape)}"
     # Check if there are missing values
-    assert np.sum(np.isnan(X)) == 0, f"Missing values found: PCA cannot be calibrated"
+    assert np.sum(pd.isnull(X)) == 0, f"Missing values found: PCA cannot be calibrated"
 
     # Number of observations and number of variables
     N = X.shape[0]
@@ -85,14 +87,14 @@ def build_pca(X, A, **kwargs):
                            method_list), f"Selected Preprocessing method: {preprocess} is not included in {method_list}"
             elif k == 'Contrib':
                 contrib = v
-                method_list = ['simple', 'absolute', '2D']
+                method_list = ['simple', 'absolute', '2D-Chiang', '2D-Alcala']
                 assert any(contrib == x for x in
                            method_list), f"Selected Contrib method: {contrib} is not included in {method_list}"
             elif k == 'ConLim':
                 lim = v
             elif k == 'ContribLimMethod':
                 con_lim_method = v
-                method_list = ['norm', 't']
+                method_list = ['norm', 't', '2D-Alcala']
                 assert any(con_lim_method == x for x in
                            method_list), f"Selected ContribLim method: {con_lim_method} is not included in {method_list}"
 
@@ -117,10 +119,7 @@ def build_pca(X, A, **kwargs):
         X = X_unscaled - mu
         sigma = np.ones((1, V))
     elif preprocess == 'standardize':
-        scaler = StandardScaler()
-        X = scaler.fit_transform(X_unscaled)
-        mu = scaler.mean_
-        sigma = scaler.var_
+        [X, mu, sigma] = autoscale(X_unscaled)
 
     model['data']['X'] = X
     model['data']['X_uns'] = X_unscaled
@@ -163,21 +162,42 @@ def build_pca(X, A, **kwargs):
         lim_con = lim
         T_sq_con = np.multiply(np.matmul(np.matmul(T, np.sqrt(np.diag(np.power(sigma_sq, -1)))), P), X)
         SRE_con = np.square(E_fd)
-    elif contrib == '2D':
+    elif contrib == '2D-Chiang':
+        # Reference: Chiang, Leo H., Evan L. Russell, and Richard D. Braatz. Fault detection and diagnosis in industrial systems. Springer Science & Business Media, 2000.
         lim_con = lim
         T_sq_con = np.zeros((N, V))
         for i in range(N):
-            t = np.matmul(P.T, X[i,:].T).reshape((A,1))
-            cont = np.divide(np.multiply(np.multiply(t, X[i,:]), P.T), sigma_sq.reshape((A,1)))
-            T_sq_con[i,:] = np.sum(cont, axis=0)
+            t = np.matmul(P.T, X[i, :].T).reshape((A, 1))
+            cont = np.divide(np.multiply(np.multiply(t, X[i, :]), P.T), sigma_sq.reshape((A, 1)))
+            T_sq_con[i, :] = np.sum(cont, axis=0)
         SRE_con = np.square(E_fd)
+    elif contrib == '2D-Alcala':
+        # Reference: Alcala, Carlos F., and S. Joe Qin. "Reconstruction-based contribution for process monitoring." Automatica 45.7 (2009): 1593-1600.
+        lim_con = lim
+        C_tilde = np.eye(V) - P @ P.T
+        D = P @ np.diag(np.power(sigma_sq, -1)) @ P.T
+        T_sq_con = np.zeros((N, V))
+        SRE_con = np.zeros((N, V))
+        for i in range(V):
+            xi = np.zeros(V)
+            xi[i] = 1
+
+            numerator_T_sq = (X @ D @ xi) ** 2
+            denominator_T_sq = xi @ D @ xi
+            if denominator_T_sq > 1e-10:
+                T_sq_con[:,i] = numerator_T_sq / denominator_T_sq
+
+            numerator_SRE = (X @ C_tilde @ xi) ** 2
+            denominator_SRE = xi @ C_tilde @ xi
+            if denominator_SRE > 1e-10:
+                SRE_con[:,i] = numerator_SRE / denominator_SRE
 
     model['diagnostics']['T_sq'] = T_sq
     model['diagnostics']['SRE'] = SRE
     model['diagnostics']['T_sq_con'] = T_sq_con
     model['diagnostics']['SRE_con'] = SRE_con
 
-    dof = [x + 2 for x in range(A)]
+    dof = np.array([x + 2 for x in range(A)])
 
     DOF = 2 * (T_sq.mean()) ** 2 / T_sq.var()
     scalef = T_sq.mean() / DOF
@@ -196,6 +216,26 @@ def build_pca(X, A, **kwargs):
         t_cl = st.t.ppf(lim_con, DOF)
         lim_T_sq_con = np.sqrt(np.diag(np.matmul(T_sq_con.T, T_sq_con)) / DOF) * t_cl
         lim_SRE_con = np.sqrt(np.diag(np.matmul(SRE_con.T, SRE_con)) / DOF) * t_cl
+    elif con_lim_method == '2D-Alcala':
+        # Reference: Alcala, Carlos F., and S. Joe Qin. "Reconstruction-based contribution for process monitoring." Automatica 45.7 (2009): 1593-1600.
+        C_tilde = np.eye(V) - P @ P.T
+        D = P @ np.diag(np.power(sigma_sq, -1)) @ P.T
+        lim_T_sq_con = np.zeros(V)
+        lim_SRE_con = np.zeros(V)
+
+        for i in range(V):
+            xi = np.zeros(V)
+            xi[i] = 1
+
+            numerator_T_sq = xi @ D @ np.cov(X.T) @ D @ xi
+            denominator_T_sq = xi @ D @ xi
+            g_T_sq = numerator_T_sq / denominator_T_sq
+            lim_T_sq_con[i] = g_T_sq * chi2.ppf(lim, df=1)
+
+            numerator_SRE = xi @ C_tilde @ np.cov(X.T) @ C_tilde @ xi
+            denominator_SRE = xi @ C_tilde @ xi
+            g_SRE = numerator_SRE / denominator_SRE
+            lim_SRE_con[i] = g_SRE * chi2.ppf(lim, df=1)
 
     model['estimates']['lim'] = lim
     model['estimates']['dof'] = dof
@@ -249,7 +289,7 @@ def cross_validate_pca(X, A, **kwargs):
     # Check if the requested number of PCs is feasible
     assert A <= np.min(X.shape), f"The number of principal components cannot exceed min(size(X)) = {np.min(X.shape)}"
     # Check if there are missing values
-    assert np.sum(np.isnan(X)) == 0, f"Missing values found: PCA cannot be calibrated"
+    assert np.sum(pd.isnull(X)) == 0, f"Missing values found: PCA cannot be calibrated"
 
     # Optionals initialization
     G_obs = []
@@ -324,24 +364,21 @@ def pca_by_svd(X, A):
     # Check if the data array is mean-centered
     assert np.max(X.mean(axis=0)) < 10**(-9), f"The data array must be mean-centered for PCA model calibration"
 
-    N = X.shape[0]
-    V = X.shape[1]
-
+    [N, V] = X.shape
     if N < V:
         _, _, vh = svd(np.matmul(X, X.T) / (V - 1))
-        vh = vh[:A,:]
+        vh = vh[:A, :]
         P = np.matmul(X.T, vh.T)
-	P = np.linalg.lstsq(np.diag(np.sqrt(np.diag(P.T @ P))), P.T, rcond=None)[0].T
+        P = np.linalg.lstsq(np.diag(np.sqrt(np.diag(P.T @ P))), P.T, rcond=None)[0].T
     else:
         _, _, P = svd(np.matmul(X.T, X) / (N - 1))
-        P = P[:,:A]
+        P = P.T
 
-    index = np.argmax(np.abs(P).axis=0)
-    colsign = np.empty((1,A))
-    for a in range(A):
-	colsign[0,a] = np.sign(P[index[a], a])
+    colsign = np.sign(P[np.abs(P).argmax(axis=0), [x for x in range(0, P.shape[1])]])
     P = np.multiply(P, colsign)
+    P = P[:, :A]
     T = np.matmul(X, P)
+
     return P, T
 
 def rescale_by(X, mu, sigma):
@@ -352,3 +389,73 @@ def scale_by(X, mu, sigma):
     sigma = [math.inf if i == 0 else i for i in sigma]
     X = np.divide((X - mu), np.tile(sigma, (X.shape[0], 1)))
     return X
+
+def autoscale(X):
+    mu_X = np.mean(X, axis=0)
+    sigma_X = np.std(X, axis=0, ddof=1)
+    X_scaled = (X - mu_X) / sigma_X
+    return X_scaled, mu_X, sigma_X
+
+
+def pca_cross_validation(X, n_splits=5, num_repeat=5, num_components_ub=10):
+    """
+    Perform K-Fold Cross Validation to determine the optimal number of components in PCA.
+
+    Parameters:
+    X (array): Input data matrix of shape (n_samples, n_features).
+    max_components (int): Maximum number of principal components to test.
+    n_splits (int): Number of folds in K-Fold cross-validation.
+
+    Returns:
+    best_n_components (int): Optimal number of principal components.
+    errors (array): Array of average reconstruction errors for each component count.
+    """
+
+    max_components = min(int(np.floor(X.shape[0] * (1 - 1 / n_splits))), num_components_ub)
+    PRESS = np.empty((max_components, n_splits * num_repeat))
+    g = 0
+
+    for kk in range(num_repeat):
+        kf = KFold(n_splits=n_splits, shuffle=True, random_state=kk)
+
+        # K-Fold cross-validation
+        for fold, (train_index, test_index) in enumerate(kf.split(X)):
+            X_train, X_test = X[train_index, :], X[test_index, :]
+
+            # Preprocessing
+            [X_train, mu, sigma] = autoscale(X_train)
+            X_test = scale_by(X_test, mu, sigma)
+
+            # Fit PCA on the training data
+            [P, T] = pca_by_svd(X_train, max_components)
+
+            # Initialize the replacement matrix
+            rep_mat = np.identity(X.shape[1])
+            for a in range(max_components):
+                # Check if deflation is possible
+                # Deflate the replacement matrix and assign it to a temporary variable
+                P_replaced = rep_mat - np.outer(P[:, a], P[:, a].T)
+                # Check if any term on the diagonal is gone to zero or negative
+                if not any(np.diag(P_replaced) < np.finfo(float).eps * 10):
+                    # if this not happened, keep the deflated matrix otherwise keep the old one
+                    rep_mat = P_replaced
+
+                rep_a = copy.deepcopy(rep_mat)
+                d = np.diag(rep_a)
+                d = [np.finfo(float).eps if x < np.finfo(float).eps else x for x in d]
+
+                for v in range(X.shape[1]):
+                    rep_a[:, v] = (1 / d[v]) * rep_a[:, v]
+                PRESS[a, g] = np.mean(np.sum(np.matmul(X_test, rep_a) ** 2, axis=0))
+            g = g + 1
+
+    # Remove splits where such case is outlier for representing PRESS
+    PRESS_outlier_ind = np.zeros(PRESS.shape)
+    for a in range(0, max_components):
+        lim_PRESS_con = st.norm.ppf(0.999, np.mean(PRESS[a,:]), np.std(PRESS[a,:]))
+        PRESS_outlier_ind[a,:] = PRESS[a,:] > lim_PRESS_con
+
+    PRESS_outlier_colind = np.sum(PRESS_outlier_ind, axis=0) == max_components
+    PRESS = PRESS[:, ~PRESS_outlier_colind]
+
+    return PRESS

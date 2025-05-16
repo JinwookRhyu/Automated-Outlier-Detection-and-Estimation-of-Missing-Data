@@ -14,7 +14,7 @@ def plot_dataset(X, X_label, Time, variables, units, title, xlabel, ylim_lb, yli
         size = [20, 30, 70, 30, 70]
         numcol = math.ceil(X.shape[1] / numrow)
 
-        fig, axs = plt.subplots(figsize=(20,12), nrows=numrow, ncols=numcol)
+        fig, axs = plt.subplots(figsize=(numcol*5,numrow*5), nrows=numrow, ncols=numcol)
         fig.supxlabel(xlabel, fontsize=30)
         if if_saveplot == False:
             fig.suptitle(title, fontsize=40)
@@ -60,8 +60,8 @@ def plot_dataset(X, X_label, Time, variables, units, title, xlabel, ylim_lb, yli
         plt.tight_layout()
         if if_saveplot == True:
             plt.savefig(fname=fname + title + '.png')
-        plt.show()
-        plt.close()
+        #plt.show()
+        #plt.close()
 
 
 def plot_evaluation(feasibility, plausibility, time_final, fname, title, if_saveplot, if_showplot = True):
@@ -138,5 +138,5 @@ def plot_evaluation(feasibility, plausibility, time_final, fname, title, if_save
         fig.tight_layout()
         if if_saveplot == True:
             plt.savefig(fname=fname + title + '.png')
-        plt.show()
-        plt.close()
+        #plt.show()
+        #plt.close()

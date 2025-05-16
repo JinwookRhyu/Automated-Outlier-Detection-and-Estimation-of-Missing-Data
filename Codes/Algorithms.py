@@ -61,8 +61,9 @@ class alternatingfit:
 
     def _update_T(self, N, V, A):
         for i in range(N):
-            self.e_T[i, :] = (np.matmul(inv(np.matmul(self.e_Pdev[:, :, i].T, self.e_Pdev[:, :, i])),
-                                        np.matmul(self.e_Pdev[:, :, i].T, self.X0[i, :].T - self.e_mudev[:, i]))).T
+            AA = self.e_Pdev[:, :, i]
+            b = self.X0[i, :].T - self.e_mudev[:, i]
+            self.e_T[i, :] = np.linalg.lstsq(AA, b, rcond=None)[0].T
         self.e_Tdev = np.zeros((N, A, V))
         for j in range(V):
             self.e_Tdev[self.O_list_col[j], :, j] = self.e_T[self.O_list_col[j], :]
@@ -77,10 +78,9 @@ class alternatingfit:
 
     def _update_P(self, N, V, A):
         for j in range(V):
-            self.e_P[j, :] = np.matmul((self.X0[:, j].T - self.e_mu[j]).T, np.matmul(self.e_Tdev[:, :, j],
-                                                                                     inv(np.matmul(
-                                                                                         self.e_Tdev[:, :, j].T,
-                                                                                         self.e_Tdev[:, :, j]))))
+            AA = self.e_Tdev[:, :, j]
+            b = self.X0[:, j] - self.e_mu[j]
+            self.e_P[j, :] = np.linalg.lstsq(AA, b, rcond=None)[0].T
         self.e_Pdev = np.zeros((V, A, N))
         for i in range(N):
             self.e_Pdev[self.O_list_row[i], :, i] = self.e_P[self.O_list_row[i], :]
@@ -721,5 +721,3 @@ class ialmfit:
 
     def recover(self):
         return self.Amat
-
-

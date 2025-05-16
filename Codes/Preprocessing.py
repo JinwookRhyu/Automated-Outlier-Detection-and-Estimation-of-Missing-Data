@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from skimage import measure
 
 # Generate a subset using only the ones in variables_mask and observations_mask
@@ -15,12 +16,12 @@ def preprocessing_A1(X, Time, method):
     assert any(method == x for x in method_list), f"Selected method: {method} is not included in {method_list}"
     if method == 'mean':
         for j in range(X.shape[1]):
-            indnan = np.argwhere(np.isnan(X[:, j]))
+            indnan = np.argwhere(pd.isnull(X[:, j]))
             colmean = np.nanmean(X[:, j])
             X[indnan, j] = colmean
     elif method == 'interpolation':
         for j in range(X.shape[1]):
-            all_labels = measure.label(np.isnan(X[:, j]))
+            all_labels = measure.label(pd.isnull(X[:, j]))
             numgroups = np.max(all_labels)
             for k in range(1, numgroups + 1):
                 indnan = np.argwhere(all_labels == k)
@@ -40,7 +41,7 @@ def preprocessing_A1(X, Time, method):
                     X[indnan, j] = value_init
     elif method == 'last_observed':
         for j in range(X.shape[1]):
-            all_labels = measure.label(np.isnan(X[:, j]))
+            all_labels = measure.label(pd.isnull(X[:, j]))
             numgroups = np.max(all_labels)
             for k in range(1, numgroups + 1):
                 indnan = np.argwhere(all_labels == k)
